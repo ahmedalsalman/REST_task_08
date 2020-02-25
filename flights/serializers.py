@@ -17,10 +17,19 @@ class BookingSerializer(serializers.ModelSerializer):
 
 
 class BookingDetailsSerializer(serializers.ModelSerializer):
+	total = serializers.SerializerMethodField()
 	class Meta:
 		model = Booking
 		fields = ['flight', 'date', 'passengers', 'id']
 
+
+
+Modify the BookingDetailsSerializer so that it returns the following:
+total: which is the total cost of the flight for all passengers.
+flight: Use the FlightSerializer to display the flight info.
+date.
+id.
+passengers.
 
 class AdminUpdateBookingSerializer(serializers.ModelSerializer):
 	class Meta:
@@ -50,9 +59,24 @@ class RegisterSerializer(serializers.ModelSerializer):
         new_user.save()
         return validated_data
 
+class UserSerializer(serializers.ModelSerializer):
+	class Meta:
+		model = User
+		fields = ['first_name', 'last_name']
 
 class ProfileSerializer(serializers.ModelSerializer):
+	user = UserSerializer()
+	bookings = BookingSerializer()
+	tier = serializers.SerializerMethodField()
 	class Meta:
 		model = Profile
-		fields = ['user', 'miles']
-
+		fields = ['user', 'miles', 'bookings', 'tier']
+	def get_tier(self, obj):
+		if miles <= 9999:
+			return "Blue"
+		elif miles <= 59,999 :
+			return "Silver"
+		elif miles <= 99,999  :
+			return "Gold"
+		elif miles > 99,999 :
+			return "Platinum"
