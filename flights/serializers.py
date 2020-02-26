@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-
+from django.utils import timezone
 from .models import Flight, Booking, Profile
 
 
@@ -11,6 +11,7 @@ class FlightSerializer(serializers.ModelSerializer):
 
 
 class BookingSerializer(serializers.ModelSerializer):
+	flight = serializers.SlugRelatedField(read_only=True,slug_field='destination')
 	class Meta:
 		model = Booking
 		fields = ['flight', 'date', 'id']
@@ -18,18 +19,13 @@ class BookingSerializer(serializers.ModelSerializer):
 
 class BookingDetailsSerializer(serializers.ModelSerializer):
 	total = serializers.SerializerMethodField()
+	flight = FlightSerializer()
 	class Meta:
 		model = Booking
-		fields = ['flight', 'date', 'passengers', 'id']
+		fields = ['flight', 'date', 'passengers', 'id', 'total']
+	def get_total(self, obj):
+		return obj.passengers * obj.flight.price
 
-
-
-Modify the BookingDetailsSerializer so that it returns the following:
-total: which is the total cost of the flight for all passengers.
-flight: Use the FlightSerializer to display the flight info.
-date.
-id.
-passengers.
 
 class AdminUpdateBookingSerializer(serializers.ModelSerializer):
 	class Meta:
@@ -66,17 +62,20 @@ class UserSerializer(serializers.ModelSerializer):
 
 class ProfileSerializer(serializers.ModelSerializer):
 	user = UserSerializer()
-	bookings = BookingSerializer()
+	past_bookings = serializers.SerializerMethodField() #BookingSerializer(many=True)
 	tier = serializers.SerializerMethodField()
 	class Meta:
 		model = Profile
-		fields = ['user', 'miles', 'bookings', 'tier']
+		fields = ['user', 'miles', 'past_bookings', 'tier']
 	def get_tier(self, obj):
-		if miles <= 9999:
+		if obj.miles <= 9999:
 			return "Blue"
-		elif miles <= 59,999 :
+		elif obj.miles <= 59999 :
 			return "Silver"
-		elif miles <= 99,999  :
+		elif obj.miles <= 99999  :
 			return "Gold"
-		elif miles > 99,999 :
+		elif obj.miles > 99999 :
 			return "Platinum"
+	def get_past_bookings(self, obj):
+		booking =  Booking.objects.filter(user=obj.user, date__lt=timezone.now().date())
+		return BookingSerializer(booking, many=True).data

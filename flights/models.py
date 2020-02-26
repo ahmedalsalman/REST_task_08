@@ -25,6 +25,5 @@ class Booking(models.Model):
 class Profile(models.Model):
 	user = models.OneToOneField(User, on_delete=models.CASCADE)
 	miles = models.PositiveIntegerField(default=0)
-
 	def __str__(self):
 		return str(self.user)
